@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phishing Detector</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #060818;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Animated background blobs */
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .blob-1 {
+            width: 500px;
+            height: 500px;
+            background: #7c3aed;
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .blob-2 {
+            width: 400px;
+            height: 400px;
+            background: #2563eb;
+            bottom: -100px;
+            right: -100px;
+            animation-delay: 3s;
+        }
+
+        .blob-3 {
+            width: 300px;
+            height: 300px;
+            background: #7c3aed;
+            bottom: 100px;
+            left: 200px;
+            animation-delay: 5s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-30px) scale(1.05); }
+        }
+
+        /* Grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+        }
+
+        .wrapper {
+            width: 90%;
+            max-width: 580px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Top badge */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(124, 58, 237, 0.15);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            border-radius: 50px;
+            padding: 8px 18px;
+            color: #a78bfa;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 24px;
+        }
+
+        .badge-dot {
+            width: 8px;
+            height: 8px;
+            background: #7c3aed;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        h1 {
+            font-size: 42px;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.2;
+            margin-bottom: 12px;
+        }
+
+        h1 span {
+            background: linear-gradient(135deg, #7c3aed, #2563eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 15px;
+            line-height: 1.7;
+            margin-bottom: 36px;
+        }
+
+        /* Main card */
+        .card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 36px;
+            backdrop-filter: blur(20px);
+        }
+
+        .input-label {
+            color: #94a3b8;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* URL input with icon */
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            pointer-events: none;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 16px 16px 16px 48px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            color: #ffffff;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #7c3aed;
+            background: rgba(124, 58, 237, 0.08);
+            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+        }
+
+        input[type="text"]::placeholder {
+            color: #334155;
+        }
+
+        /* Model selector */
+        .model-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .model-option {
+            position: relative;
+        }
+
+        .model-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .model-card {
+            display: block;
+            padding: 16px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .model-option input[type="radio"]:checked + .model-card {
+            background: rgba(124, 58, 237, 0.15);
+            border-color: #7c3aed;
+        }
+
+        .model-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .model-name {
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .model-acc {
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        /* Submit button */
+        button[type="submit"] {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #7c3aed, #2563eb);
+            border: none;
+            border-radius: 14px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(124, 58, 237, 0.4);
+        }
+
+        button[type="submit"]:active {
+            transform: translateY(0);
+        }
+
+        /* Stats row */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .stat {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-number {
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #7c3aed, #2563eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            color: #475569;
+            font-size: 11px;
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Features list */
+        .features-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .feature-tag {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 50px;
+            padding: 5px 12px;
+            color: #475569;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+    <div class="wrapper">
+
+        <div style="text-align: center; margin-bottom: 32px;">
+            <div class="badge">
+                <div class="badge-dot"></div>
+                AI-Powered Security
+            </div>
+            <h1>Detect <span>Phishing</span><br>Websites Instantly</h1>
+            <p class="subtitle">Paste any URL and our machine learning model will analyse<br>16 features to determine if it's safe or malicious.</p>
+        </div>
+
+        <div class="card">
+
+            <form action="/predict" method="POST">
+
+                <label class="input-label">Website URL</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">🔗</span>
+                    <input type="text" 
+                           name="url" 
+                           placeholder="https://example.com" 
+                           required />
+                </div>
+
+                <label class="input-label" style="margin-bottom: 12px;">Choose ML Model</label>
+                <div class="model-grid">
+                    <div class="model-option">
+                        <input type="radio" name="model" id="dt" value="1">
+                        <label class="model-card" for="dt">
+                            <div class="model-icon">🌳</div>
+                            <div class="model-name">Decision Tree</div>
+                            <div class="model-acc">93.31% accuracy</div>
+                        </label>
+                    </div>
+                    <div class="model-option">
+                        <input type="radio" name="model" id="rf" value="2" checked>
+                        <label class="model-card" for="rf">
+                            <div class="model-icon">🌲</div>
+                            <div class="model-name">Random Forest</div>
+                            <div class="model-acc">96.94% accuracy</div>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit">🔍 Analyse URL Now</button>
+
+            </form>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-number">11,430</div>
+                    <div class="stat-label">URLs trained</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">96.94%</div>
+                    <div class="stat-label">Best accuracy</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">88</div>
+                    <div class="stat-label">Features used</div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="features-row">
+            <span class="feature-tag">🔒 IP Detection</span>
+            <span class="feature-tag">🌐 Domain Age</span>
+            <span class="feature-tag">📏 URL Length</span>
+            <span class="feature-tag">🔀 Redirections</span>
+            <span class="feature-tag">🖱️ Mouse Events</span>
+            <span class="feature-tag">📊 Web Traffic</span>
+        </div>
+
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Result - Phishing Detector</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #060818;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .blob-1 {
+            width: 500px;
+            height: 500px;
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .blob-safe { background: #16a34a; }
+        .blob-phish { background: #dc2626; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-30px); }
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+        }
+
+        .wrapper {
+            width: 90%;
+            max-width: 560px;
+            position: relative;
+            z-index: 10;
+            text-align: center;
+        }
+
+        /* Big result icon */
+        .result-icon {
+            font-size: 80px;
+            margin-bottom: 24px;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .result-title {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .safe { color: #4ade80; }
+        .phishing { color: #f87171; }
+
+        .result-subtitle {
+            color: #64748b;
+            font-size: 15px;
+            margin-bottom: 32px;
+        }
+
+        /* URL display */
+        .url-box {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-align: left;
+            word-break: break-all;
+        }
+
+        .url-label {
+            color: #475569;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 4px;
+        }
+
+        .url-text {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .model-box {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .model-label {
+            color: #475569;
+            font-size: 12px;
+        }
+
+        .model-value {
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* Result card */
+        .result-card-safe {
+            background: rgba(74, 222, 128, 0.08);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+
+        .result-card-phish {
+            background: rgba(248, 113, 113, 0.08);
+            border: 1px solid rgba(248, 113, 113, 0.2);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+
+        .result-message {
+            font-size: 15px;
+            line-height: 1.7;
+        }
+
+        /* Back button */
+        .back-btn {
+            display: inline-block;
+            padding: 14px 32px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s;
+            margin-right: 12px;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-2px);
+        }
+
+        .visit-btn {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #7c3aed, #2563eb);
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .visit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(124, 58, 237, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    {% if prediction == 'legitimate' %}
+    <div class="blob blob-1 blob-safe"></div>
+    {% else %}
+    <div class="blob blob-1 blob-phish"></div>
+    {% endif %}
+
+    <div class="wrapper">
+
+        {% if prediction == 'legitimate' %}
+            <div class="result-icon">✅</div>
+            <h1 class="result-title safe">Website is Safe!</h1>
+            <p class="result-subtitle">Our AI analysed this URL and found no phishing indicators.</p>
+        {% else %}
+            <div class="result-icon">🚨</div>
+            <h1 class="result-title phishing">Phishing Detected!</h1>
+            <p class="result-subtitle">Our AI detected suspicious patterns in this URL. Stay safe!</p>
+        {% endif %}
+
+        <div class="url-box">
+            <span style="font-size: 20px;">🔗</span>
+            <div>
+                <div class="url-label">Analysed URL</div>
+                <div class="url-text">{{ url }}</div>
+            </div>
+        </div>
+
+        <div class="model-box">
+            <span class="model-label">Model Used</span>
+            <span class="model-value">{{ model_name }}</span>
+        </div>
+
+        {% if prediction == 'legitimate' %}
+        <div class="result-card-safe">
+            <p class="result-message safe">
+                ✅ This website appears to be <strong>legitimate</strong>. 
+                The URL structure, domain age, and other security indicators 
+                all look normal. You can proceed with caution.
+            </p>
+        </div>
+        {% else %}
+        <div class="result-card-phish">
+            <p class="result-message phishing">
+                ⚠️ This website shows <strong>phishing indicators</strong>. 
+                It may be trying to steal your personal information, passwords, 
+                or financial details. Do not enter any sensitive information!
+            </p>
+        </div>
+        {% endif %}
+
+        <div>
+            <a href="/" class="back-btn">← Check Another URL</a>
+            {% if prediction == 'legitimate' %}
+            <a href="{{ url }}" target="_blank" class="visit-btn">Visit Website →</a>
+            {% endif %}
+        </div>
+
+    </div>
+
+</body>
+</html>
